@@ -65,3 +65,32 @@ class LoanRequestForm(TransactionForm):
         amount = self.cleaned_data.get('amount')
 
         return amount
+
+# #For practice transfer
+# from django import forms
+# from .models import Transaction
+# from accounts.models import UserBankAccount
+
+# class TransferForm(forms.Form):
+#     account_no = forms.CharField(max_length=20, required=True, label='Recipient Account No')
+#     amount = forms.DecimalField(max_digits=12, decimal_places=2, required=True, label='Amount')
+
+#     def __init__(self, *args, **kwargs):
+#         self.account = kwargs.pop('account')  # Current logged-in user's account
+#         super().__init__(*args, **kwargs)
+
+#     def clean_account_no(self):
+#         account_no = self.cleaned_data.get('account_no')
+#         try:
+#             recipient_account = UserBankAccount.objects.get(account_no=account_no)
+#         except UserBankAccount.DoesNotExist:
+#             raise forms.ValidationError("The recipient account was not found.")
+#         return recipient_account
+
+#     def clean_amount(self):
+#         amount = self.cleaned_data.get('amount')
+#         if amount <= 0:
+#             raise forms.ValidationError("Amount must be greater than zero.")
+#         if amount > self.account.balance:
+#             raise forms.ValidationError("You do not have enough balance to transfer this amount.")
+#         return amount

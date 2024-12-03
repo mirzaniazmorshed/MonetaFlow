@@ -181,3 +181,43 @@ class LoanListView(LoginRequiredMixin,ListView):
         queryset = Transaction.objects.filter(account=user_account,transaction_type=3)
         print(queryset)
         return queryset
+    
+# from transactions.forms import TransferForm
+# from django.shortcuts import render
+# class TransferMoneyView(View):
+#     def get(self, request):
+#         form = TransferForm(account=request.user.account)
+#         return render(request, 'transactions/transfer.html', {'form': form, 'title': 'Transfer Money'})
+
+#     def post(self, request):
+#         form = TransferForm(request.POST, account=request.user.account)
+#         if form.is_valid():
+#             recipient_account = form.cleaned_data['account_no']
+#             amount = form.cleaned_data['amount']
+
+#             # Perform the transfer
+#             sender_account = request.user.account
+#             sender_account.balance -= amount
+#             recipient_account.balance += amount
+
+#             sender_account.save()
+#             recipient_account.save()
+
+#             # Create a transaction record
+#             Transaction.objects.create(
+#                 account=sender_account,
+#                 amount=-amount,
+#                 balance_after_transaction=sender_account.balance,
+#                 transaction_type=4,  # Custom type for transfer, can be added in your constants
+#             )
+#             Transaction.objects.create(
+#                 account=recipient_account,
+#                 amount=amount,
+#                 balance_after_transaction=recipient_account.balance,
+#                 transaction_type=4,  # Custom type for transfer, can be added in your constants
+#             )
+
+#             messages.success(request, "Transfer was successful!")
+#             return redirect('transactions:transaction_report')  # Redirect to transaction report or another page
+
+#         return render(request, 'transactions/transfer.html', {'form': form, 'title': 'Transfer Money'})
