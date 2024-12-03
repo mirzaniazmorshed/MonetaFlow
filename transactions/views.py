@@ -7,8 +7,6 @@ from django.views import View
 from django.http import HttpResponse
 from django.views.generic import CreateView, ListView
 from transactions.constants import DEPOSIT, WITHDRAWAL,LOAN, LOAN_PAID
-from django.core.mail import EmailMessage, EmailMultiAlternatives
-from django.template.loader import render_to_string
 from datetime import datetime
 from django.db.models import Sum
 from transactions.forms import (
@@ -17,15 +15,6 @@ from transactions.forms import (
     LoanRequestForm,
 )
 from transactions.models import Transaction
-from accounts.models import UserBankAccount
-def send_transaction_email(user, amount, subject, template):
-        message = render_to_string(template, {
-            'user' : user,
-            'amount' : amount,
-        })
-        send_email = EmailMultiAlternatives(subject, '', to=[user.email])
-        send_email.attach_alternative(message, "text/html")
-        send_email.send()
 
 class TransactionCreateMixin(LoginRequiredMixin, CreateView):
     template_name = 'transactions/transaction_form.html'
@@ -74,7 +63,7 @@ class DepositMoneyView(TransactionCreateMixin):
             self.request,
             f'{"{:,.2f}".format(float(amount))}$ was deposited to your account successfully'
         )
-        send_transaction_email(self.request.user, amount, "Deposite Message", "transactions/deposite_email.html")
+
         return super().form_valid(form)
 
 
@@ -98,7 +87,7 @@ class WithdrawMoneyView(TransactionCreateMixin):
             self.request,
             f'Successfully withdrawn {"{:,.2f}".format(float(amount))}$ from your account'
         )
-        send_transaction_email(self.request.user, amount, "Withdrawal Message", "transactions/withdrawal_email.html")
+
         return super().form_valid(form)
 
 class LoanRequestView(TransactionCreateMixin):
@@ -119,7 +108,7 @@ class LoanRequestView(TransactionCreateMixin):
             self.request,
             f'Loan request for {"{:,.2f}".format(float(amount))}$ submitted successfully'
         )
-        send_transaction_email(self.request.user, amount, "Loan Request Message", "transactions/loan_email.html")
+
         return super().form_valid(form)
     
 class TransactionReportView(LoginRequiredMixin, ListView):
@@ -172,7 +161,7 @@ class PayLoanView(LoginRequiredMixin, View):
                 loan.loan_approved = True
                 loan.transaction_type = LOAN_PAID
                 loan.save()
-                return redirect('loan_list')
+                return redirect('transactions:loan_list')
             else:
                 messages.error(
             self.request,
@@ -192,35 +181,3 @@ class LoanListView(LoginRequiredMixin,ListView):
         queryset = Transaction.objects.filter(account=user_account,transaction_type=3)
         print(queryset)
         return queryset
-
-
-from django.urls import reverse_lazy
-from django.views.generic.edit import FormView
-from .forms import TransactionForm
-
-class TransferView(FormView):
-    template_name = 'transactions/transfer.html'
-    form_class = TransactionForm
-    success_url = reverse_lazy('loan_list')  # Replace 'success' with your success URL name
-
-    def form_valid(self, form):
-        # Process the form data here (e.g., save to database)
-        account_number = form.cleaned_data['account_number']
-        amount = form.cleaned_data['amount']
-        user_account = UserBankAccount.objects.filter(account_no=account_number).first()
-        print(user_account)
-        if amount > self.request.user.account.balance:
-            messages.error(
-            self.request,
-            f'Transfer amount is greater than available balance'
-            )
-            return redirect('transfer')
-        user_account.balance += amount
-        self.request.user.account.balance -= amount
-        messages.success(
-            self.request,
-            f'Transfer Done'
-            )
-        print(account_number, amount)
-        # You can perform actions with account_number and amount here
-        return super().form_valid(form)

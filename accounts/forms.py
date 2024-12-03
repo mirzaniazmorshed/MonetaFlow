@@ -1,3 +1,4 @@
+
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from .constants import ACCOUNT_TYPE, GENDER_TYPE
@@ -60,7 +61,7 @@ class UserRegistrationForm(UserCreationForm):
             })
 
 
-#profile update informantion related form
+# profile ki ki jinis update korte parbe amader user
 
 class UserUpdateForm(forms.ModelForm):
     birth_date = forms.DateField(widget=forms.DateInput(attrs={'type':'date'}))
@@ -123,4 +124,4 @@ class UserUpdateForm(forms.ModelForm):
             user_address.country = self.cleaned_data['country']
             user_address.save()
 
-        return user            
+        return user

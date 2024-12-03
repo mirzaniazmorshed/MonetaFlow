@@ -1,6 +1,5 @@
 from django import forms
 from .models import Transaction
-
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
@@ -10,17 +9,17 @@ class TransactionForm(forms.ModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-        self.user_account = kwargs.pop('account') # account value ke pop kore anlam
+        self.account = kwargs.pop('account') # account value ke pop kore anlam
         super().__init__(*args, **kwargs)
         self.fields['transaction_type'].disabled = True # ei field disable thakbe
         self.fields['transaction_type'].widget = forms.HiddenInput() # user er theke hide kora thakbe
 
     def save(self, commit=True):
-        self.instance.account = self.user_account
+        self.instance.account = self.account
         self.instance.balance_after_transaction = self.account.balance
         return super().save()
-    
-    
+
+
 class DepositForm(TransactionForm):
     def clean_amount(self): # amount field ke filter korbo
         min_deposit_amount = 100
@@ -31,7 +30,8 @@ class DepositForm(TransactionForm):
             )
 
         return amount
-    
+
+
 class WithdrawForm(TransactionForm):
 
     def clean_amount(self):
@@ -56,10 +56,12 @@ class WithdrawForm(TransactionForm):
                 'You can not withdraw more than your account balance'
             )
 
-        return amount    
+        return amount
+
+
 
 class LoanRequestForm(TransactionForm):
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')
 
-        return amount    
+        return amount
