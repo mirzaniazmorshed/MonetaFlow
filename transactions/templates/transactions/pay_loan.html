@@ -1,0 +1,44 @@
+{% extends 'base.html' %} 
+{% block head_title %}{{ title }}{% endblock %} 
+{% block content %}
+<div class="my-10 py-3 px-4 bg-white rounded-xl shadow-md">
+  <h1 class="font-bold text-3xl text-center pb-5 pt-2">Pay Loan</h1>
+  <hr />
+  
+  <form method="POST" class="space-y-6">
+    {% csrf_token %}
+    
+    <div class="space-y-2">
+      <label for="loan_amount" class="font-bold text-lg">Loan Amount</label>
+      <input type="text" id="loan_amount" name="loan_amount" value="{{ loan.amount }}" disabled
+        class="w-full px-4 py-2 border rounded-md bg-gray-100" />
+    </div>
+
+    <div class="space-y-2">
+      <label for="account_balance" class="font-bold text-lg">Your Account Balance</label>
+      <input type="text" id="account_balance" name="account_balance" value="{{ user_account.balance }}" disabled
+        class="w-full px-4 py-2 border rounded-md bg-gray-100" />
+    </div>
+
+    <div class="space-y-2">
+      <label for="amount_to_pay" class="font-bold text-lg">Amount to Pay</label>
+      <input type="number" id="amount_to_pay" name="amount_to_pay" min="1" max="{{ loan.amount }}" 
+        class="w-full px-4 py-2 border rounded-md" placeholder="Enter amount to pay" />
+    </div>
+
+    <div class="space-y-4">
+      <button type="submit" class="w-full py-3 bg-blue-500 text-white font-bold rounded-md hover:bg-blue-600">
+        Pay Loan
+      </button>
+    </div>
+  </form>
+
+  {% if messages %}
+    <div class="mt-4">
+      {% for message in messages %}
+        <div class="text-red-600">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

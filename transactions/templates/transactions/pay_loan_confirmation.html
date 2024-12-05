@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block head_title %}Confirm Loan Payment{% endblock %}
+{% block content %}
+<div class="my-10 py-3 px-4 bg-white rounded-xl shadow-md">
+  <h1 class="font-bold text-3xl text-center pb-5">Confirm Loan Payment</h1>
+  <hr />
+  <p>Are you sure you want to pay the loan with the following details?</p>
+  <ul class="mt-5">
+    <li><strong>Loan ID:</strong> {{ loan.id }}</li>
+    <li><strong>Amount:</strong> {{ loan.amount }}</li>
+    <li><strong>Current Balance:</strong> {{ user_account.balance }}</li>
+  </ul>
+  <div class="flex justify-center mt-5">
+    <a href="{% url 'pay' loan.id %}" class="btn btn-primary mr-3">Confirm Payment</a>
+    <a href="{% url 'loan_list' %}" class="btn btn-secondary">Cancel</a>
+  </div>
+</div>
+{% endblock %}

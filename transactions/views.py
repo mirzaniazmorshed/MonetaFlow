@@ -158,27 +158,19 @@ class TransactionReportView(LoginRequiredMixin, ListView):
 class PayLoanView(LoginRequiredMixin, View):
     def get(self, request, loan_id):
         loan = get_object_or_404(Transaction, id=loan_id)
-        print(loan)
+
         if loan.loan_approve:
             user_account = loan.account
-                # Reduce the loan amount from the user's balance
-                # 5000, 500 + 5000 = 5500
-                # balance = 3000, loan = 5000
-            if loan.amount < user_account.balance:
+            if loan.amount <= user_account.balance:
                 user_account.balance -= loan.amount
                 loan.balance_after_transaction = user_account.balance
                 user_account.save()
-                loan.loan_approved = True
-                loan.transaction_type = LOAN_PAID
+                loan.transaction_type = 4
                 loan.save()
-                return redirect('transactions:loan_list')
+                return redirect()
             else:
-                messages.error(
-            self.request,
-            f'Loan amount is greater than available balance'
-        )
-
-        return redirect('loan_list')
+                messages.error(self.request, f'Loan amount is greater than available balance')
+                return redirect()
 
 
 class LoanListView(LoginRequiredMixin,ListView):
