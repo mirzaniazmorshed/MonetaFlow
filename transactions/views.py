@@ -15,6 +15,8 @@ from transactions.forms import (
     LoanRequestForm,
 )
 from transactions.models import Transaction
+from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 class TransactionCreateMixin(LoginRequiredMixin, CreateView):
     template_name = 'transactions/transaction_form.html'
@@ -37,6 +39,14 @@ class TransactionCreateMixin(LoginRequiredMixin, CreateView):
 
         return context
 
+def send_transaction_email(user, amount, subject, template):
+        message = render_to_string(template, {
+            'user' : user,
+            'amount' : amount,
+        })
+        send_email = EmailMultiAlternatives(subject, '', to=[user.email])
+        send_email.attach_alternative(message, "text/html")
+        send_email.send()
 
 class DepositMoneyView(TransactionCreateMixin):
     form_class = DepositForm
@@ -63,7 +73,7 @@ class DepositMoneyView(TransactionCreateMixin):
             self.request,
             f'{"{:,.2f}".format(float(amount))}$ was deposited to your account successfully'
         )
-
+        send_transaction_email(self.request.user, amount, "Deposite Message", "transactions/deposite_email.html")
         return super().form_valid(form)
 
 
@@ -87,7 +97,7 @@ class WithdrawMoneyView(TransactionCreateMixin):
             self.request,
             f'Successfully withdrawn {"{:,.2f}".format(float(amount))}$ from your account'
         )
-
+        send_transaction_email(self.request.user, amount, "Withdrawal Message", "transactions/withdrawal_email.html")
         return super().form_valid(form)
 
 class LoanRequestView(TransactionCreateMixin):
@@ -108,7 +118,7 @@ class LoanRequestView(TransactionCreateMixin):
             self.request,
             f'Loan request for {"{:,.2f}".format(float(amount))}$ submitted successfully'
         )
-
+        send_transaction_email(self.request.user, amount, "Loan Request Message", "transactions/loan_email.html")
         return super().form_valid(form)
     
 class TransactionReportView(LoginRequiredMixin, ListView):
@@ -182,42 +192,41 @@ class LoanListView(LoginRequiredMixin,ListView):
         print(queryset)
         return queryset
     
-# from transactions.forms import TransferForm
-# from django.shortcuts import render
-# class TransferMoneyView(View):
-#     def get(self, request):
-#         form = TransferForm(account=request.user.account)
-#         return render(request, 'transactions/transfer.html', {'form': form, 'title': 'Transfer Money'})
+from transactions.forms import TransferForm
+from django.shortcuts import render
+class TransferMoneyView(View):
+    def get(self, request):
+        form = TransferForm(account=request.user.account)
+        return render(request, 'transactions/transfer.html', {'form': form, 'title': 'Transfer Money'})
 
-#     def post(self, request):
-#         form = TransferForm(request.POST, account=request.user.account)
-#         if form.is_valid():
-#             recipient_account = form.cleaned_data['account_no']
-#             amount = form.cleaned_data['amount']
+    def post(self, request):
+        form = TransferForm(request.POST, account=request.user.account)
+        if form.is_valid():
+            recipient_account = form.cleaned_data['account_no']
+            amount = form.cleaned_data['amount']
 
-#             # Perform the transfer
-#             sender_account = request.user.account
-#             sender_account.balance -= amount
-#             recipient_account.balance += amount
+            # Perform the transfer
+            sender_account = request.user.account
+            sender_account.balance -= amount
+            recipient_account.balance += amount
 
-#             sender_account.save()
-#             recipient_account.save()
+            sender_account.save()
+            recipient_account.save()
 
-#             # Create a transaction record
-#             Transaction.objects.create(
-#                 account=sender_account,
-#                 amount=-amount,
-#                 balance_after_transaction=sender_account.balance,
-#                 transaction_type=4,  # Custom type for transfer, can be added in your constants
-#             )
-#             Transaction.objects.create(
-#                 account=recipient_account,
-#                 amount=amount,
-#                 balance_after_transaction=recipient_account.balance,
-#                 transaction_type=4,  # Custom type for transfer, can be added in your constants
-#             )
+            # Create a transaction record
+            Transaction.objects.create(
+                account=sender_account,
+                amount=-amount,
+                balance_after_transaction=sender_account.balance,
+                transaction_type=5,  # Custom type for transfer, can be added in your constants
+            )
+            Transaction.objects.create(
+                account=recipient_account,
+                amount=amount,
+                balance_after_transaction=recipient_account.balance,
+                transaction_type=5,  # Custom type for transfer, can be added in your constants
+            ) 
+            messages.success(request, "Transfer was successful!")
+            return redirect('transaction_report')  # Redirect to transaction report or another page
 
-#             messages.success(request, "Transfer was successful!")
-#             return redirect('transactions:transaction_report')  # Redirect to transaction report or another page
-
-#         return render(request, 'transactions/transfer.html', {'form': form, 'title': 'Transfer Money'})
+        return render(request, 'transactions/transfer.html', {'form': form, 'title': 'Transfer Money'})
